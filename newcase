@@ -1,0 +1,163 @@
+#!/bin/bash
+version=1.4
+updated="04/29/2021"
+print_usage () {
+ 	cat <<- _EOF_
+ 	Usage: newcase [OPTION1] ... [OPTION2]...
+ 	
+		Create a New Case Directory and notes file based on current month, year, and case number.
+		Created by: Timothy Stam
+		
+		OPTIONS:
+			-h Help		Display this help
+			-c Case		Specify your Salesforce case number. Otherwise, you will be asked.
+			-e Editor	File editor to use when opening notes. Otherwise, use default editor.
+			-f Notes File	Name of the output file for your notes. Defaults to notes.txt.
+			-o Open Notes	Automatically open notes file in selected/default editor.
+			-V Version	Display version number of this script.
+	
+		VERSION: $version
+		Last Updated: $updated
+	
+		Suggestions? Bugs? Email tim@slamminstam.com
+								 https://github.com/slamminstam/newcase
+		_EOF_
+	exit
+}
+
+print_version () {	
+	cat <<-	_EOF_
+
+newcase.sh 
+VERSION: $version 
+Last Updated: $updated
+
+		_EOF_
+			exit
+}	
+	
+while test $# -gt 0;
+do
+	case "$1" in
+		-h)
+			shift
+			print_usage
+			shift
+			;;
+		-e)	shift
+			OPTE=$1
+			;;
+		-c)	shift
+			OPTC=$1
+			;;
+		-f)	shift
+			OPTF=$1
+			;;
+		-o)	shift
+			OPTO="true"
+			continue
+			;;			
+		-V)	shift
+			print_version
+			exit 1
+			;;
+		*)	shift
+			print_usage
+			exit 1
+			;;
+		
+	esac
+	shift
+done
+
+#set directory & format
+month=`date +%Y\-%m\-%b`
+
+if [[ -n $OPTF && ! -e $OPTF ]] 
+	then filename=$OPTF
+	else filename="notes.txt"
+fi
+
+
+#check for invalid case number entries
+invalid_case () {
+	echo "Invalid input '$NUMBER$OPTC'" >&2
+	exit 1
+}
+
+#identify default text editor
+
+editor () {
+	grep "text/plain" /usr/share/applications/defaults.list | awk -F '=' '{ print $2 }' | awk -F '.' '{ print $1 }'
+	}
+
+#check for installed editor	
+validinstalled () {
+	if [[ -n $OPTE && -e /usr/bin/$OPTE ]] 
+		then echo "Opening in editor $OPTE" && `$OPTE $notesdir/$filename 2>/dev/null` &
+		else echo "Opening in default editor" && `editor` $notesdir/$filename 2>/dev/null &
+	fi  	
+}
+
+#check for dependent directories, create if needed
+[ ! -d $HOME/Documents/cases ] && mkdir $HOME/Documents/cases
+[ ! -d $HOME/Documents/cases/$month ] && mkdir $HOME/Documents/cases/$month
+
+#gather case number and set full directory path
+if [[ -n $OPTC ]] 
+	then notesdir="$HOME/Documents/cases/$month/$OPTC"
+ 	else read -p 'What is the case number? ' -t 120 NUMBER && notesdir="$HOME/Documents/cases/$month/$NUMBER"
+fi
+
+#check for case number directory existance, create if nonexistent
+[ ! -d $notesdir ] && mkdir $notesdir
+
+# input is empty (invalid)
+[[ -z $NUMBER && -z $OPTC ]] && invalid_case
+
+#input is multiple items (invalid)
+(( $(echo $NUMBER | wc -w) > 1 )) && invalid_case
+
+#check case number validity (8 digits)
+if [[ "$NUMBER" =~ ^[[:digit:]]{8}$ || "$OPTC" =~ ^[[:digit:]]{8}$ ]]; 
+		then
+			echo "You entered $NUMBER$OPTC"
+		else
+			echo "'$NUMBER$OPTC' is not a valid case number."
+			exit 1
+fi
+
+
+#offer to open notes file once existing
+
+notes_open () {
+
+if [[ $OPTO == "true" ]] 
+	then validinstalled && sleep 1
+	else read -p 'Open notes file now? (y/n) '
+
+		while true ; do
+			case $REPLY in 
+				Y|y) 	validinstalled
+					sleep 1 
+					break
+					;;
+				N|n) 	echo "Okay, fine."
+					exit 1 
+					;;
+				*) 	echo "You entered something wrong, dummy." >&2 && notes_open
+					break
+					;;
+			esac
+		done;
+fi
+}
+
+#check for existence of notes file, prevent overwrite and create if needed
+if [[ -e $notesdir/$filename ]] ; 
+	then
+		echo "$filename already exists for case $NUMBER$OPTC." && notes_open
+		
+	else
+		touch $notesdir/$filename && echo "Case notes file created in $notesdir as $filename" && notes_open ; 		
+fi 
