@@ -12,10 +12,11 @@ Check ~/Documents/cases/2021-04-Apr/case#/ for a file called “notes.txt”. If
 If asked to open notes.txt, open in default editor unless a flag is set to pick a specific one.
 
 The following options are available for the script:
-Usage: newcase [OPTION1] ... [OPTION2]...
- 	
+
 		Create a New Case Directory and notes file based on current month, year, and case number.
 		Created by: Timothy Stam
+		
+		Usage: newcase [OPTION1] ... [OPTION2]...
 
 		OPTIONS:
 			-h Help		Display this help
