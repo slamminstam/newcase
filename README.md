@@ -1,36 +1,68 @@
-# newcase
-Create a New Case Directory and notes file based on current month, year, and Salesforce case number. 
+# newcase.sh
+A lightweight Bash utility for creating standardized case directories and notes files based on date and case number.
 
 Installing this in a file specified by your .bashrc file will allow you to run this without specifying the path.
 
-This script does the following:
-- Check ~/Documents for a folder called “cases”. If it does not exist, create it.
-- Check the current date by YYYY-MonthDate-MonthName (i.e. 2021-04-Apr)
-- Check ~/Documents/cases for a folder named by the current date in that format, and if it doesn’t exist then create it.
-- Check ~/Documents/cases/2021-04-Apr/ for a directory matching the case number entered. If it doesn’t exist, create it.
-- Check ~/Documents/cases/2021-04-Apr/case#/ for a file called “notes.txt”. If it doesn’t exist, create it, then offer to open it. If it does, offer to open it.
-- If asked to open notes.txt, open in default editor unless a flag is set to pick a specific one.
+## Overview
+`newcase.sh` was designed to reduce friction during technical investigation workflows by automating the repetitive setup of case folders and notes files.
+Instead of manually creating directories, naming files, and organizing artifacts, the script generates a consistent structure instantly—allowing focus to stay on troubleshooting and analysis.
 
-The following options are available for the script:
+## What it does
+- Ensures a base `~/Documents/cases` directory exists
+- Organizes cases by date using the format:
+  - **Year-Month-MonthName** (e.g., `2026-03-Mar`)
+- Creates a case-specific folder using the provided case number
+- Generates a `notes.txt` file inside the case directory (if it doesn’t already exist)
+- Offers to open the notes file after creation (or if it already exists)
 
-		Create a New Case Directory and notes file based on current month, year, and case number.
-		Created by: Timothy Stam
-		
-		Usage: newcase [OPTION1] ... [OPTION2]...
+## Workflow
+When executed, the script:
+1. Checks for a `cases` directory in `~/Documents` and creates it if needed  
+2. Determines the current date and formats it as `YYYY-MM-Mon`  
+3. Creates a date-based folder if it does not already exist  
+4. Creates a case-number folder within that date directory  
+5. Creates `notes.txt` if missing. Will not overwrite existing notes.txt file.  
+6. Prompts to open the notes file:
+   - Uses the system default editor  
+   - Or a specified editor if a flag is provided  
 
-		OPTIONS:
-			-h Help		Display this help
-			-c Case		Specify your Salesforce case number. Otherwise, you will be asked.
-			-e Editor	File editor to use when opening notes. Otherwise, use default editor.
-			-f Notes File	Name of the output file for your notes. Defaults to notes.txt.
-			-o Open Notes	Automatically open notes file in selected/default editor.
-			-V Version	Display version number of this script.
-	
-		VERSION: 1.4.1
-		Last Updated: 02/03/2026
-	
-		Suggestions? Bugs? Email tim@slamminstam.com
+### Example
+```bash
+./newcase.sh 1234567
+```
+creates
+```
+/cases/2026-03-Mar/1234567/
+├── notes.txt
+```
+#### Usage
+```bash
+newcase  [OPTION1] ... [OPTION2]...
+```
+###### Options
+* `-h` Help — Display usage information
+* `-c` Case — Specify case number
+* `-e` Editor — Set preferred editor
+* `-f` Notes File — Specify notes filename
+* `-o` Open Notes — Automatically open notes file
+* `-v` Version — Display version information
 
-Some further updates I have considered:
-Put in a “cleanup” option that checks the current date and removes anything older than 1 month (typically, cases aren’t open for longer that this).
-Put together a package that includes a “config” file for the script, where users could specify preferences like preferred editor instead of having to use a flag every time.
+## Why it exists
+In high-volume support environments, small inefficiencies compound quickly.
+This tool removes setup overhead and enforces consistent structure, making it easier to:
+* Locate past work
+* Maintain organized case artifacts
+* Transition between active investigations
+
+## Notes
+* Designed for UNIX-based systems
+* Assumes a predefined base directory (can be modified in script)
+* Built for speed, simplicity, and repeatable workflows
+
+### Some further updates I have considered:
+- Create “cleanup” flag that checks the current date and removes anything older than 1 month (typically, cases aren’t open for longer that this).
+  - Could make this flag configurable by time, defaulting to 1 month.
+- Package to include a “config” file for the script, allowing users to specify preferences like preferred editor, instead of having to use a flag every time.
+
+## License
+MIT
